@@ -43,7 +43,7 @@ data = dataset[10000:50000,:]
 
 for i in data[:,0]:
 	img = cv2.imread(i)
-	img = cv2.resize(img, (28,28))
+	img = cv2.resize(img, (36,36))
 	K.append(img)
 X = numpy.array(K)
 
@@ -70,8 +70,8 @@ Y_test = create_dataset(Y_test, look_back)
 Y_train = Y_train.astype('float32')
 Y_test = Y_test.astype('float32')
 # reshape to be [samples][pixels][width][height]
-X_train = X_train.reshape(X_train.shape[0], 3, 28, 28).astype('float32')
-X_test = X_test.reshape(X_test.shape[0], 3, 28, 28).astype('float32')
+X_train = X_train.reshape(X_train.shape[0], 3, 36, 36).astype('float32')
+X_test = X_test.reshape(X_test.shape[0], 3, 36, 36).astype('float32')
 X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
 # normalize inputs from 0-255 to 0-1
@@ -81,7 +81,7 @@ num_classes = 2
 def model():
 	# create model
 	model = Sequential()
-	model.add(Conv2D(32,3, 3, border_mode='same', input_shape=(3, 28, 28), activation='relu'))
+	model.add(Conv2D(32,3, 3, border_mode='same', input_shape=(3, 36, 36), activation='relu'))
 	model.add(Dropout(0.15))
 	model.add(Conv2D(32,3, 3, activation='relu', border_mode='same'))
 	model.add(MaxPooling2D(pool_size=(2, 2)))
