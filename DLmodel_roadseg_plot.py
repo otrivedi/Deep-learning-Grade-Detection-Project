@@ -46,8 +46,16 @@ for i in data[:,0]:
 	K.append(img)
 X = numpy.array(K)
 
+#MA Filter
+N = 500
 look_back = 30
-Y = numpy.array(data[:,2:4])
+Y = numpy.empty_like(data[:,2:4])
+imu_p_smooth_ma = dataset[10000-N:50000+N,2]
+imu_p_smooth_t = numpy.convolve(imu_p_smooth_ma, numpy.ones((N,))/N, mode='valid')
+imu_p_smooth_t = imu_p_smooth_t[int(N/2):int(len(imu_p_smooth_t)-(N/2))-1]
+Y[:,0] = imu_p_smooth_t
+Y[:,1] = data[:,3]
+
 # split into train and test sets
 train_size = int(len(data) * 0.67)
 test_size = len(data) - train_size
