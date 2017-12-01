@@ -53,15 +53,15 @@ plt.plot(ts,imu_p_smooth,label='Unmodified pitch')
 # plt.plot(ts,imu_p_smooth,label='SG filter (1001 values, 3rd degree)')
 
 #MA filter
-N = 500
-imu_p_smooth_n = np.zeros(int(N/2)-1)
-imu_p_smooth_nn = np.zeros(int(N/2))
-imu_p_smooth_t = np.convolve(imu_p_smooth, np.ones((N,))/N, mode='valid')
+N = 1000
+imu_p_smooth_ma = dataset[20000-N:40000+N,2]
+# imu_p_smooth_nn = np.zeros(int(N/2))
+imu_p_smooth_t = np.convolve(imu_p_smooth_ma, np.ones((N,))/N, mode='valid')
 # np.append(imu_p_smooth,imu_p_smooth_t)
-imu_p_smooth = np.concatenate((imu_p_smooth_n,imu_p_smooth_t),axis=0)
-imu_p_smooth = np.concatenate((imu_p_smooth,imu_p_smooth_nn),axis=0)
+# imu_p_smooth = np.concatenate((imu_p_smooth_ma,imu_p_smooth_t),axis=0)
+# imu_p_smooth = np.concatenate((imu_p_smooth,imu_p_smooth_nn),axis=0)
 # plt.plot(ts[:20000-N+1],imu_p_smooth,label='Moving-avg filter (30 values)')
-plt.plot(ts,imu_p_smooth,label='Moving-avg filter (30 values)')
+plt.plot(ts,imu_p_smooth_t[int(N/2):int(len(imu_p_smooth_t)-(N/2))-1],label='Moving-avg filter ({} values)'.format(N))
 
 
 plt.xlabel('Time(Seconds)')
