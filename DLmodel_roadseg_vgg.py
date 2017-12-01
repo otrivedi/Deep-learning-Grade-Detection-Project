@@ -43,7 +43,7 @@ data = dataset[10000:50000,:]
 
 for i in data[:,0]:
 	img = cv2.imread(i)
-	img = cv2.resize(img, (36,36))
+	img = cv2.resize(img, (224,224))
 	K.append(img)
 X = numpy.array(K)
 
@@ -78,8 +78,8 @@ Y_test = create_dataset(Y_test, look_back)
 Y_train = Y_train.astype('float32')
 Y_test = Y_test.astype('float32')
 # reshape to be [samples][pixels][width][height]
-X_train = X_train.reshape(X_train.shape[0], 3, 36, 36).astype('float32')
-X_test = X_test.reshape(X_test.shape[0], 3, 36, 36).astype('float32')
+X_train = X_train.reshape(X_train.shape[0], 3, 224, 224).astype('float32')
+X_test = X_test.reshape(X_test.shape[0], 3, 224, 224).astype('float32')
 X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
 # normalize inputs from 0-255 to 0-1
