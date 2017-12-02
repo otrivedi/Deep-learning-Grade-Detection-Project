@@ -28,6 +28,7 @@ from sklearn.pipeline import Pipeline
 from keras.wrappers.scikit_learn import KerasClassifier
 from keras.utils import np_utils
 from keras import backend as K
+from scipy.signal import savgol_filter
 K.set_image_dim_ordering('th')
 
 # fix random seed for reproducibility
@@ -36,7 +37,7 @@ numpy.random.seed(seed)
 
 K = []
 # load the dataset
-dataframe = pandas.read_csv('roadseg_data_newest.csv', header=1)
+dataframe = pandas.read_csv('road_dataset_newest.csv', header=1)
 dataset = dataframe.values
 data = dataset[10000:50000,:]
 
@@ -47,13 +48,18 @@ for i in data[:,0]:
 X = numpy.array(K)
 
 #MA Filter
-N = 500
-look_back = 30*4
+#N = 500
+look_back = 60
 Y = numpy.empty_like(data[:,2:4])
-imu_p_smooth_ma = dataset[10000-N:50000+N,2]
-imu_p_smooth_t = numpy.convolve(imu_p_smooth_ma, numpy.ones((N,))/N, mode='valid')
-imu_p_smooth_t = imu_p_smooth_t[int(N/2):int(len(imu_p_smooth_t)-(N/2))-1]
-Y[:,0] = imu_p_smooth_t
+#imu_p_smooth_ma = dataset[25000-N:55000+N,2]
+#imu_p_smooth_t = numpy.convolve(imu_p_smooth_ma, numpy.ones((N,))/N, mode='valid')
+#imu_p_smooth_t = imu_p_smooth_t[int(N/2):int(len(imu_p_smooth_t)-(N/2))-1]
+
+#SG filter
+size = 91
+imu_p_smooth = savgol_filter(dataset[10000:50000,2],size,2)
+
+Y[:,0] = imu_p_smooth
 Y[:,1] = data[:,3]
 
 # split into train and test sets
@@ -147,3 +153,4 @@ with open("model.json", "w") as json_file:
 # serialize weights to HDF5
 model.save_weights("model.h5")
 #print("Saved model to disk")
+
