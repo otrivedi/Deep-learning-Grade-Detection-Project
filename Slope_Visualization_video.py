@@ -34,18 +34,18 @@ lineType               = 1
 
 
 K = []
-S=55000
-E=60000
-SS=55060
-EE=60060
-dataframe2 = pandas.read_csv('roadseg_dataset_newest.csv')
+S=20000
+E=25000
+SS=20060
+EE=25060
+dataframe2 = pandas.read_csv('road_dataset_newest.csv')
 dataset2 = dataframe2.values
 data_2 = dataset2[S:E,0]
 paths_old = data_2
 #img_old = cv2.imread(path_old, 0)
 data2_2 = dataset2[SS:EE,0]
 
-dataframe = pandas.read_csv('roadseg_dataset_newest.csv',delimiter=",")
+dataframe = pandas.read_csv('road_dataset_newest.csv',delimiter=",")
 dataset = dataframe.values
 data = dataset[S:E,0:7]
 
@@ -88,7 +88,7 @@ for i in tqdm(range(0,1000)):
 	img = cv2.imread(path)
 	img = cv2.resize(img, (36,36))
 	X = numpy.array(img)
-	X = X.reshape(3, 36, 36).astype('float32')
+	X = X.reshape(1,3, 36, 36).astype('float32')
 	X = X / 255
 
 	# load json and create model
@@ -116,7 +116,7 @@ for i in tqdm(range(0,1000)):
 	img.save('output.jpg')
 	img_old = cv2.imread('output.jpg')	
 	cv2.putText(img_old,"Predicted road slope (IMU pitch): %f" %P_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
-	height = int(90-(C_pitch*5))
+	height = int(90-(P_pitch*5))
 	if height<90:
 		status = "Accelerate"
 	else:
