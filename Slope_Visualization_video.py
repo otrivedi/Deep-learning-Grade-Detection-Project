@@ -38,7 +38,7 @@ S=55000
 E=60000
 SS=55060
 EE=60060
-dataframe2 = pandas.read_csv('road_dataset_newest.csv')
+dataframe2 = pandas.read_csv('roadseg_dataset_newest.csv')
 dataset2 = dataframe2.values
 data_2 = dataset2[S:E,0]
 paths_old = data_2
@@ -80,43 +80,17 @@ plt.show()
 data2 = dataset[SS:EE,0:6]
 path = data[0][0]
 
-def blend_transparent(face_img, overlay_t_img):
-    # Split out the transparency mask from the colour info
-    overlay_img = overlay_t_img[:,:,:3] # Grab the BRG planes
-    overlay_mask = overlay_t_img[:,:,3:]  # And the alpha plane
-
-    # Again calculate the inverse mask
-    background_mask = 255 - overlay_mask
-
-    # Turn the masks into three channel, so we can use them as weights
-    #overlay_mask = cv2.cvtColor(overlay_mask, cv2.COLOR_GRAY2BGR)
-    #background_mask = cv2.cvtColor(background_mask, cv2.COLOR_GRAY2BGR)
-
-    # Create a masked out face image, and masked out overlay
-    # We convert the images to floating point in range 0.0 - 1.0
-    face_part = (face_img * (1 / 255.0)) * (background_mask * (1 / 255.0))
-    overlay_part = (overlay_img * (1 / 255.0)) * (overlay_mask * (1 / 255.0))
-
-    # And finally just add them together, and rescale it back to an 8bit integer image    
-    return np.uint8(cv2.addWeighted(face_part, 255.0, overlay_part, 255.0, 0.0))
-
 writer = VideoWriter('video.avi', frameSize=(1280,720))
 writer.open()
 
 for i in tqdm(range(0,1000)):
 	path = data[i][0]
 	img = cv2.imread(path)
-	img = cv2.resize(img, (28,28))
+	img = cv2.resize(img, (36,36))
 	X = numpy.array(img)
-	X = X.reshape(1, 3, 28, 28).astype('float32')
+	X = X.reshape(3, 36, 36).astype('float32')
 	X = X / 255
 
-	path2 = data2[i][0]
-	img2 = cv2.imread(path2)
-	img2 = cv2.resize(img2, (28,28))
-	X2 = numpy.array(img2)
-	X2 = X2.reshape(1, 3, 28, 28).astype('float32')
-	X2 = X2 / 255
 	# load json and create model
 	json_file = open("model.json", 'r')
 	loaded_model_json = json_file.read()
@@ -128,11 +102,10 @@ for i in tqdm(range(0,1000)):
 
 	loaded_model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 	score1 = loaded_model.predict(X)
-	score2 = loaded_model.predict(X2)
 	P_pitch = score1[0][0]
-	C_pitch = data[i][2]
+	# C_pitch = data[i][2]
 	#print(C_pitch)
-	C_vel = data[i][4]
+	# C_vel = data[i][4]
 	t = 1
 	#slope1 = slope(P_pitch,C_pitch,C_vel,t)
 	# slope1 = numpy.around(numpy.rad2deg(numpy.arcsin(-(P_pitch-C_pitch)/(C_vel*t))), decimals=2)
@@ -142,7 +115,7 @@ for i in tqdm(range(0,1000)):
 	img.paste(img2,(15,15))
 	img.save('output.jpg')
 	img_old = cv2.imread('output.jpg')	
-	cv2.putText(img_old,"Predicted road slope (IMU pitch): %f" %C_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
+	cv2.putText(img_old,"Predicted road slope (IMU pitch): %f" %P_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
 	height = int(90-(C_pitch*5))
 	if height<90:
 		status = "Accelerate"
