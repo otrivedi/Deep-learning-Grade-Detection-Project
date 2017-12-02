@@ -1,9 +1,3 @@
-'''Visualization of the filters of VGG16, via gradient ascent in input space.
-
-This script can run on CPU in a few minutes.
-
-Results example: http://i.imgur.com/4nj4KjN.jpg
-'''
 from __future__ import print_function
 
 from scipy.misc import imsave
@@ -67,16 +61,16 @@ def model():
 	model.add(Conv2D(32,3, 3, border_mode='same', input_shape=(3, 36, 36), activation='relu'))
 	#model.add(Dropout(0.15))
 	model.add(Conv2D(32,3, 3, activation='relu', border_mode='same'))
-	model.add(MaxPooling2D(pool_size=(2, 2),dim_ordering="th"))
+	#model.add(MaxPooling2D(pool_size=(2, 2),dim_ordering="th"))
 	model.add(Conv2D(64,3, 3, activation='relu', border_mode='same'))
 	#model.add(Dropout(0.15))
 	model.add(Conv2D(64,3, 3, activation='relu', border_mode='same'))
-	model.add(MaxPooling2D(pool_size=(2, 2),dim_ordering="th"))
+	#model.add(MaxPooling2D(pool_size=(2, 2),dim_ordering="th"))
 	model.add(Conv2D(128,3, 3, activation='relu', border_mode='same'))
 	#model.add(Dropout(0.15))
 	model.add(Conv2D(128,3, 3, activation='relu', border_mode='same'))
-	model.add(MaxPooling2D(pool_size=(2, 2),dim_ordering="th"))
-	model.add(Flatten())
+	#model.add(MaxPooling2D(pool_size=(2, 2),dim_ordering="th"))
+	#model.add(Flatten())
 	#model.add(Dropout(0.15))
 	model.add(Dense(1024, activation='relu', W_constraint=maxnorm(3)))
 	#model.add(Dropout(0.15))
@@ -92,12 +86,13 @@ print('Model loaded.')
 model.summary()
 
 # this is the placeholder for the input images
-input_img = cv2.imread('dataset/35000.jpg')
+input_img = cv2.imread('test.jpg')
+print(input_img)
 input_img = cv2.resize(input_img, (36,36))
 
 # get the symbolic outputs of each "key" layer (we gave them unique names).
 layer_dict = dict([(layer.name, layer) for layer in model.layers[1:]])
-
+print('HERE:',layer_dict)
 
 def normalize(x):
     # utility function to normalize a tensor by its L2 norm
@@ -113,17 +108,17 @@ for filter_index in range(200):
 
     # we build a loss function that maximizes the activation
     # of the nth filter of the layer considered
-    layer_output = layer_dict[layer_name].output
+    layer_output = layer_dict['conv2d_5'].output
     if K.image_data_format() == 'channels_first':
         loss = K.mean(layer_output[:, filter_index, :, :])
-    else:
-        loss = K.mean(layer_output[:, :, :, filter_index])
+    #else:
+    #    loss = K.mean(layer_output[:, :, :, filter_index])
 
     # we compute the gradient of the input picture wrt this loss
     grads = K.gradients(loss, input_img)[0]
 
     # normalization trick: we normalize the gradient
-    grads = normalize(grads)
+    #grads = normalize(grads)
 
     # this function returns the loss and grads given the input picture
     iterate = K.function([input_img], [loss, grads])
