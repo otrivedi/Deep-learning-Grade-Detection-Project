@@ -118,16 +118,22 @@ def model():
 # build the model
 model = model()
 # Fit the model
-model.fit(X_train, Y_train, validation_data=(X_test, Y_test), nb_epoch=5, batch_size=150, verbose=2)
+model.fit(X_train, Y_train, validation_data=(X_test, Y_test), nb_epoch=1, batch_size=150, verbose=2)
 
 # make predictions
 trainPredict = model.predict(X_train)
 testPredict = model.predict(X_test)
 # calculate root mean squared error
-trainScore = math.sqrt(mean_squared_error(Y_train[:,0], trainPredict[:,0]))
-print('Train Score: %.2f RMSE' % (trainScore))
-testScore = math.sqrt(mean_squared_error(Y_test[:,0], testPredict[:,0]))
-print('Test Score: %.2f RMSE' % (testScore))
+trainScore_pitch = math.sqrt(mean_squared_error(Y_train[:,0], trainPredict[:,0]))
+print('Pitch: Train Score: %.2f RMSE' % (trainScore_pitch))
+testScore_pitch = math.sqrt(mean_squared_error(Y_test[:,0], testPredict[:,0]))
+print('Pitch: Test Score: %.2f RMSE' % (testScore_pitch))
+# calculate root mean squared error
+trainScore_altitude = math.sqrt(mean_squared_error(Y_train[:,1], trainPredict[:,1]))
+print('Altitude: Train Score: %.2f RMSE' % (trainScore_altitude))
+testScore_altitude = math.sqrt(mean_squared_error(Y_test[:,1], testPredict[:,1]))
+print('Altitude: Test Score: %.2f RMSE' % (testScore_altitude))
+
 # shift train predictions for plotting
 trainPredictPlot = numpy.empty_like(data[:,2:4])
 trainPredictPlot[:, 0] = numpy.nan
@@ -145,7 +151,33 @@ plt.plot(trainPredictPlot, label = 'Training')
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
 plt.plot(testPredictPlot, label = 'Testing')
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+plt.xlabel("Time in micro sec")
+plt.ylabel("Slope (IMU Pitch)")
+# plt.title("Slope Result 1")
 plt.show()
+
+# shift train predictions for plotting
+trainPredictPlot = numpy.empty_like(data[:,2:4])
+trainPredictPlot[:, 0] = numpy.nan
+trainPredictPlot[:, 1] = numpy.nan
+trainPredictPlot[look_back:len(trainPredict)+look_back, 0] = trainPredict[:,1]
+trainPredictPlot[look_back:len(trainPredict)+look_back, 1] = Y_train[:,1]
+# shift test predictions for plotting
+testPredictPlot = numpy.empty_like(data[:,2:4])
+testPredictPlot[:, 0] = numpy.nan
+testPredictPlot[:, 1] = numpy.nan
+testPredictPlot[len(trainPredict)+(look_back*2)+1:len(data)-1, 0] = testPredict[:,1]
+testPredictPlot[len(trainPredict)+(look_back*2)+1:len(data)-1, 1] = Y_test[:,1]
+# plot baseline and predictions
+plt.plot(trainPredictPlot, label = 'Training')
+plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+plt.plot(testPredictPlot, label = 'Testing')
+plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+plt.xlabel("Time in micro sec")
+plt.ylabel("Slope (GPS Altitude)")
+# plt.title("Slope Result 2")
+plt.show()
+
 # serialize model to JSON
 model_json = model.to_json()
 with open("model.json", "w") as json_file:
@@ -153,4 +185,3 @@ with open("model.json", "w") as json_file:
 # serialize weights to HDF5
 model.save_weights("model.h5")
 #print("Saved model to disk")
-
