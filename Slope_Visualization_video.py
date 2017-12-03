@@ -34,8 +34,8 @@ lineType               = 1
 
 
 K = []
-S=20000
-E=25000
+S=59280
+E=60250
 SS=20060
 EE=25060
 dataframe2 = pandas.read_csv('road_dataset_newest.csv')
@@ -50,7 +50,7 @@ dataset = dataframe.values
 data = dataset[S:E,0:7]
 
 imu_p_smooth = dataset[S:E,2]
-plt.plot(ts,imu_p_smooth,label='Unmodified pitch')
+#plt.plot(ts,imu_p_smooth,label='Unmodified pitch')
 
 
 # imu_p_smooth = dataset[20000:40000,2]
@@ -59,7 +59,7 @@ plt.plot(ts,imu_p_smooth,label='Unmodified pitch')
 #SG filter
 size = 91
 imu_p_smooth = savgol_filter(imu_p_smooth,size,2)
-plt.plot(ts,imu_p_smooth,label='SG filter ({} values, 3rd degree)'.format(size))
+#plt.plot(ts,imu_p_smooth,label='SG filter ({} values, 3rd degree)'.format(size))
 
 #MA filter
 N = 90
@@ -70,7 +70,7 @@ imu_p_smooth_t = np.convolve(imu_p_smooth_ma, np.ones((N,))/N, mode='valid')
 # imu_p_smooth = np.concatenate((imu_p_smooth_ma,imu_p_smooth_t),axis=0)
 # imu_p_smooth = np.concatenate((imu_p_smooth,imu_p_smooth_nn),axis=0)
 # plt.plot(ts[:20000-N+1],imu_p_smooth,label='Moving-avg filter (30 values)')
-plt.plot(ts,imu_p_smooth_t[int(N/2):int(len(imu_p_smooth_t)-(N/2))-1],label='Moving-avg filter ({} values)'.format(N))
+#plt.plot(ts,imu_p_smooth_t[int(N/2):int(len(imu_p_smooth_t)-(N/2))-1],label='Moving-avg filter ({} values)'.format(N))
 
 
 plt.xlabel('Time(Seconds)')
@@ -103,11 +103,13 @@ for i in tqdm(range(0,1000)):
 	loaded_model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 	score1 = loaded_model.predict(X)
 	P_pitch = score1[0][0]
+	P_alt = score1[0][1]
+	C_alt = data[i][3]
 	# C_pitch = data[i][2]
 	#print(C_pitch)
-	# C_vel = data[i][4]
+	C_vel = data[i][4]
 	t = 1
-	#slope1 = slope(P_pitch,C_pitch,C_vel,t)
+	slope1 = slope(C_alt,P_alt,C_vel,t)
 	# slope1 = numpy.around(numpy.rad2deg(numpy.arcsin(-(P_pitch-C_pitch)/(C_vel*t))), decimals=2)
 	#print("Predicted slope based on IMU pitch", slope1)
 	img = Image.open(paths_old[i])
@@ -115,7 +117,8 @@ for i in tqdm(range(0,1000)):
 	img.paste(img2,(15,15))
 	img.save('output.jpg')
 	img_old = cv2.imread('output.jpg')	
-	cv2.putText(img_old,"Predicted road slope (IMU pitch): %f" %P_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
+	cv2.putText(img_old,"Predicted slope (based on IMU pitch): %f" %P_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
+	cv2.putText(img_old,"Predicted slope (based on gps altitude): %f" %slope1, (10,475), font, 	fontScale, fontColor, lineType)	
 	height = int(90-(P_pitch*5))
 	if height<90:
 		status = "Accelerate"
@@ -124,7 +127,7 @@ for i in tqdm(range(0,1000)):
 	cv2.rectangle(img_old,(10,10),(400,175),(0,0,255),3)
 	cv2.line(img_old,(205,90),(370,height),(255,0,0),3)
 	cv2.putText(img_old,"Vehicle mode: {}".format(status),(20,160),font,fontScale,(255,0,0), 1)
-	#cv2.imwrite('saved/{}.jpg'.format(i),img_old)
+	cv2.imwrite('saved/{}.jpg'.format(i),img_old)
 	#cv2.imwrite('{}.jpg'.format(i),img_old)
 	#im.save(
 	writer.write(img_old)
