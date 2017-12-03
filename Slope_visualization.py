@@ -12,19 +12,21 @@ from tqdm import *
 from skvideo.io import VideoWriter
 from scipy.signal import savgol_filter
 import matplotlib.pyplot as plt
+from PIL import Image
+
 
 def slope(pitch_1,pitch_2,velocity,time):
     slope = numpy.around(numpy.rad2deg(numpy.arcsin(-(pitch_1-pitch_2)/(velocity*time))), decimals=2)
     return slope
 ts = []
 
-for i in np.arange(0,1000,0.033):
-	if len(ts)<20000:
+for i in np.arange(0,6000,0.033):
+	if len(ts)<10000:
 		ts.append(i)
 #plt.plot(ts)
 #plt.show()
 
-font                   = cv2.FONT_HERSHEY_SIMPLEX
+font                   = cv2.FONT_HERSHEY_TRIPLEX
 bottomLeftCornerOfText = (10,500)
 fontScale              = 0.5
 fontColor              = (255,255,255)
@@ -32,30 +34,38 @@ lineType               = 1
 
 
 K = []
+S=20000
+E=30000
+SS=20060
+EE=30060
 dataframe2 = pandas.read_csv('road_dataset_newest.csv')
 dataset2 = dataframe2.values
-data_2 = dataset2[20000:40000,0]
+data_2 = dataset2[S:E,0]
 paths_old = data_2
 #img_old = cv2.imread(path_old, 0)
-data2_2 = dataset2[20030:40030,0]
+# data2_2 = dataset2[SS:EE,0]
+p_data = data2_2 = dataset2[SS:EE,0:7]
 
 dataframe = pandas.read_csv('roadseg_dataset_newest.csv',delimiter=",")
 dataset = dataframe.values
-data = dataset[20000:40000,0:7]
+data = dataset[S:E,0:7]
 
-imu_p_smooth = dataset[20030:40030,2]
-# imu_p_smooth = dataset[20000:40000,2]
+imu_p_smooth = dataset[S:E,2]
 plt.plot(ts,imu_p_smooth,label='Unmodified pitch')
 
+
+# imu_p_smooth = dataset[20000:40000,2]
+
+
 #SG filter
-# size = 1001
-# imu_p_smooth = savgol_filter(imu_p_smooth,size,3)
-# plt.plot(ts,imu_p_smooth,label='SG filter (1001 values, 3rd degree)')
+size = 91
+imu_p_smooth = savgol_filter(imu_p_smooth,size,2)
+plt.plot(ts,imu_p_smooth,label='SG filter ({} values, 3rd degree)'.format(size))
 
 #MA filter
-N = 1000
-imu_p_smooth_ma = dataset[20000-N:40000+N,2]
-# imu_p_smooth_nn = np.zeros(int(N/2))
+N = 90
+imu_p_smooth_ma = dataset[S-N:E+N,2]
+#imu_p_smooth_nn = np.zeros(int(N/2))
 imu_p_smooth_t = np.convolve(imu_p_smooth_ma, np.ones((N,))/N, mode='valid')
 # np.append(imu_p_smooth,imu_p_smooth_t)
 # imu_p_smooth = np.concatenate((imu_p_smooth_ma,imu_p_smooth_t),axis=0)
@@ -68,25 +78,62 @@ plt.xlabel('Time(Seconds)')
 plt.ylabel('Slope')
 plt.legend()
 plt.show()
-data2 = dataset[20030:40030,0:6]
+data2 = dataset[SS:EE,0:6]
 path = data[0][0]
 
+def blend_transparent(face_img, overlay_t_img):
+    # Split out the transparency mask from the colour info
+    overlay_img = overlay_t_img[:,:,:3] # Grab the BRG planes
+    overlay_mask = overlay_t_img[:,:,3:]  # And the alpha plane
+
+    # Again calculate the inverse mask
+    background_mask = 255 - overlay_mask
+
+    # Turn the masks into three channel, so we can use them as weights
+    #overlay_mask = cv2.cvtColor(overlay_mask, cv2.COLOR_GRAY2BGR)
+    #background_mask = cv2.cvtColor(background_mask, cv2.COLOR_GRAY2BGR)
+
+    # Create a masked out face image, and masked out overlay
+    # We convert the images to floating point in range 0.0 - 1.0
+    face_part = (face_img * (1 / 255.0)) * (background_mask * (1 / 255.0))
+    overlay_part = (overlay_img * (1 / 255.0)) * (overlay_mask * (1 / 255.0))
+
+    # And finally just add them together, and rescale it back to an 8bit integer image    
+    return np.uint8(cv2.addWeighted(face_part, 255.0, overlay_part, 255.0, 0.0))
 
 writer = VideoWriter('video.avi', frameSize=(1280,720))
 writer.open()
 
-for i in tqdm(range(0,2000)):
+for i in tqdm(range(0,1000)):
 	#C_pitch = data[i][2]
 	C_pitch = imu_p_smooth[i]
 	#print(C_pitch)
 	C_vel = data[i][4]
 	t = 1
-	#slope1 = slope(P_pitch,C_pitch,C_vel,t)
+	Altitude_current = data[i][3]
+	Altitude_predicted = p_data[i][3]
+	# print(Altitude_predicted)
+	slope1 = slope(Altitude_current,Altitude_predicted,C_vel,t)
 	# slope1 = numpy.around(numpy.rad2deg(numpy.arcsin(-(P_pitch-C_pitch)/(C_vel*t))), decimals=2)
 	#print("Predicted slope based on IMU pitch", slope1)
-	img_old = cv2.imread(paths_old[i])	
-	cv2.putText(img_old,"Predicted IMU pitch for next second: %f" %C_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
+	img = Image.open(paths_old[i])
+	img2 = Image.open('car.jpg')
+	img.paste(img2,(15,15))
+	img.save('output.jpg')
+	img_old = cv2.imread('output.jpg')	
+	cv2.putText(img_old,"Predicted slope (based on IMU pitch): %f" %C_pitch, bottomLeftCornerOfText, font, 	fontScale, fontColor, lineType)
+	cv2.putText(img_old,"Predicted slope (based on gps altitude): %f" %slope1, (10,475), font, 	fontScale, fontColor, lineType)
+	height = int(90-(C_pitch*5))
+	if height<90:
+		status = "Accelerate"
+	else:
+		status = "Decelerate"
+	cv2.rectangle(img_old,(10,10),(400,175),(0,0,255),3)
+	cv2.line(img_old,(205,90),(370,height),(255,0,0),3)
+	cv2.putText(img_old,"Vehicle mode: {}".format(status),(20,160),font,fontScale,(255,0,0), 1)
 	#cv2.imwrite('saved/{}.jpg'.format(i),img_old)
+	#cv2.imwrite('{}.jpg'.format(i),img_old)
+	#im.save(
 	writer.write(img_old)
 #cv2.destroyAllWindows()
 writer.release()
