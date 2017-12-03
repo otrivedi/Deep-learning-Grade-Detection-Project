@@ -28,6 +28,7 @@ from sklearn.pipeline import Pipeline
 from keras.wrappers.scikit_learn import KerasClassifier
 from keras.utils import np_utils
 from keras import backend as K
+from quiver_engine import server
 K.set_image_dim_ordering('th')
 
 # fix random seed for reproducibility
@@ -48,7 +49,7 @@ X = numpy.array(K)
 
 #MA Filter
 N = 500
-look_back = 30
+look_back = 450
 Y = numpy.empty_like(data[:,2:4])
 imu_p_smooth_ma = dataset[10000-N:50000+N,2]
 imu_p_smooth_t = numpy.convolve(imu_p_smooth_ma, numpy.ones((N,))/N, mode='valid')
@@ -111,8 +112,10 @@ def model():
 	return model
 # build the model
 model = model()
+#server.launch(model)
+
 # Fit the model
-model.fit(X_train, Y_train, validation_data=(X_test, Y_test), nb_epoch=1, batch_size=150, verbose=2)
+model.fit(X_train, Y_train, validation_data=(X_test, Y_test), nb_epoch=5, batch_size=150, verbose=2)
 
 # make predictions
 trainPredict = model.predict(X_train)
