@@ -3,10 +3,14 @@ Project by Onkar Trivedi, Aishwary Jagetia &amp; Animesh Nema
 
 Dataset collected and made available by MIT AgeLab. Acquired from the following link: http://lexfridman.com/carsync/
 
+The CNN can be run by the following steps:
+
+Parsing the main datset: Main_Dataset_Parsing.py (converts the main video_front file into individual frames)
+Parsing to segmented images: Road_segmentation.py
+
+Running the final CNN model: DLmodel_final_CNN.py
+
+Generating video to visualize the model results: Slope_Visualization_video.py
 
 
-
-SavGol filter info:
-https://docs.scipy.org/doc/scipy-0.16.1/reference/generated/scipy.signal.savgol_filter.html
-https://www.youtube.com/watch?v=W6lCo2gSDdA&t=132s
-https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter
+[NOTE: The model.h5 & model.json files are provided, generated from the final CNN model. road_dataset_newest.csv & roadseg_dataset_newest.csv contain the respective csv files with the required IMU pitch & GPS altitude data.]
