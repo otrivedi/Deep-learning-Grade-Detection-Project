@@ -118,7 +118,7 @@ def model():
 # build the model
 model = model()
 # Fit the model
-model.fit(X_train, Y_train, validation_data=(X_test, Y_test), nb_epoch=1, batch_size=150, verbose=2)
+model.fit(X_train, Y_train, validation_data=(X_test, Y_test), nb_epoch=10, batch_size=150, verbose=2)
 
 # make predictions
 trainPredict = model.predict(X_train)
