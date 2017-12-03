@@ -9,7 +9,7 @@ Parsing the main datset: Main_Dataset_Parsing.py (converts the main video_front 
 Parsing to segmented images: Road_segmentation.py
 
 Running the final CNN model: DLmodel_final_CNN.py
-
+Visualizing the CNN model: CNNmodel_Visualization.py
 Generating video to visualize the model results: Slope_Visualization_video.py
 
 
