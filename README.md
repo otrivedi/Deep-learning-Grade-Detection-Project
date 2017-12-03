@@ -6,7 +6,8 @@ Dataset collected and made available by MIT AgeLab. Acquired from the following 
 The CNN can be run by the following steps:
 
 Parsing the main datset: Main_Dataset_Parsing.py (converts the main video_front file into individual frames)
-Parsing to segmented images: Road_segmentation.py
+
+Generating a corresponding segmented dataset: Road_segmentation.py
 
 Running the final CNN model: DLmodel_final_CNN.py
 Visualizing the CNN model: CNNmodel_Visualization.py
