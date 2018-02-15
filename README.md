@@ -14,6 +14,6 @@ Running the final CNN model: DLmodel_final_CNN.py
 Visualizing the CNN model: CNNmodel_Visualization.py
 
 Generating a video to visualize the model results: Slope_Visualization_video.py
-
+https://www.dropbox.com/sh/mjra6t2qfae8s56/AACC5cWL4Zs0DCpZabBjdAida?dl=0
 
 [NOTE: The model.h5 & model.json files are provided, generated from the final CNN model. road_dataset_newest.csv & roadseg_dataset_newest.csv contain the respective csv files with the required IMU pitch & GPS altitude data.]
